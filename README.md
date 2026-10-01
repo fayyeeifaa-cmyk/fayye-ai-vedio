@@ -1,0 +1,1 @@
+kootta itti fayyadamaa
