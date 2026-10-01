@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Fayyee AI Video</title>
+<style>
+:root{--bg:#08111f;--card:#101d31;--card2:#16263e;--text:#f5f7fb;--muted:#9fb0c7;--accent:#7c5cff;--accent2:#21d4a7;--border:#263954}
+*{box-sizing:border-box} body{margin:0;font-family:Inter,Arial,sans-serif;background:linear-gradient(135deg,#07101d,#101a31);color:var(--text)}
+.app{max-width:1050px;margin:auto;padding:28px 18px 50px}.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.logo{display:flex;gap:12px;align-items:center}.logoMark{width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--accent),#21a7ff);display:grid;place-items:center;font-weight:900;font-size:22px}
+h1{font-size:25px;margin:0}.tag{color:var(--muted);font-size:12px;margin-top:3px}.pill{padding:8px 12px;border:1px solid var(--border);border-radius:99px;color:#cdd8e8;font-size:12px}
+.grid{display:grid;grid-template-columns:1.05fr .95fr;gap:18px}.card{background:rgba(16,29,49,.9);border:1px solid var(--border);border-radius:20px;padding:20px;box-shadow:0 15px 40px #0003}
+.card h2{font-size:16px;margin:0 0 15px}.upload{height:300px;border:1.5px dashed #466184;border-radius:16px;display:grid;place-items:center;overflow:hidden;position:relative;background:#0b1728}.upload img{width:100%;height:100%;object-fit:cover;display:none}.uploadContent{text-align:center;padding:20px}.uploadIcon{font-size:42px}.upload p{color:var(--muted);margin:8px 0 15px;font-size:13px}
+button,.select{border:0;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer}.primary{width:100%;background:linear-gradient(90deg,var(--accent),#9a5cff);color:white;font-size:15px}.secondary{background:#1a2a43;color:#eaf0f8;border:1px solid var(--border)}button:disabled{opacity:.45;cursor:not-allowed}
+textarea{width:100%;min-height:120px;resize:vertical;background:#0b1728;color:white;border:1px solid var(--border);border-radius:13px;padding:13px;font:inherit;outline:none}textarea:focus{border-color:var(--accent)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:15px 0}.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:7px}.select{width:100%;background:#0b1728;color:white;border:1px solid var(--border)}
+.preview{height:300px;border-radius:16px;background:#0b1728;border:1px solid var(--border);display:grid;place-items:center;overflow:hidden;position:relative}.preview video{width:100%;height:100%;object-fit:cover;display:none}.empty{text-align:center;color:var(--muted);padding:20px}.spinner{width:42px;height:42px;border:4px solid #ffffff20;border-top-color:var(--accent2);border-radius:50%;animation:spin 1s linear infinite;margin:auto}@keyframes spin{to{transform:rotate(360deg)}}
+.status{margin-top:12px;color:var(--muted);font-size:12px;min-height:18px}.footer{text-align:center;color:#7386a0;font-size:11px;margin-top:22px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.upload,.preview{height:260px}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="logo"><div class="logoMark">F</div><div><h1>Fayyee AI Video</h1><div class="tag">Image → Video Generator</div></div></div>
+    <div class="pill">Prototype</div>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <h2>1. Upload your image</h2>
+      <div class="upload" id="dropZone">
+        <img id="imagePreview" alt="Selected image">
+        <div class="uploadContent" id="uploadContent">
+          <div class="uploadIcon">🖼️</div>
+          <p>Choose an image or drag it here</p>
+          <button class="secondary" id="chooseBtn">Upload Image</button>
+          <input id="fileInput" type="file" accept="image/*" hidden>
+        </div>
+      </div>
+      <div class="status" id="fileStatus">No image selected.</div>
+    </section>
+
+    <section class="card">
+      <h2>2. Describe the motion</h2>
+      <textarea id="prompt" placeholder="Example: The gorilla slowly moves its head, turns the pages of the book and looks at the camera."></textarea>
+      <div class="row">
+        <div class="field"><label>Aspect ratio</label>
+          <select class="select" id="ratio"><option>9:16</option><option>16:9</option><option>1:1</option></select>
+        </div>
+        <div class="field"><label>Duration</label>
+          <select class="select" id="duration"><option value="4">4 seconds</option><option value="6">6 seconds</option><option value="10">10 seconds</option></select>
+        </div>
+      </div>
+      <button class="primary" id="generateBtn" disabled>✨ Generate Video</button>
+      <div class="status" id="status"></div>
+    </section>
+
+    <section class="card" style="grid-column:1/-1">
+      <h2>3. Video result</h2>
+      <div class="preview" id="videoBox">
+        <div class="empty" id="emptyResult">Your generated video will appear here.</div>
+        <div class="empty" id="loading" style="display:none"><div class="spinner"></div><p>Creating your video...</p></div>
+        <video id="video" controls loop></video>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:10px">
+        <a id="downloadBtn" class="secondary" style="display:none;text-decoration:none" download="fayyee-ai-video.mp4">⬇️ Save Video</a>
+      </div>
+    </section>
+  </div>
+  <div class="footer">Fayyee AI Video • Front-end prototype • Connect an image-to-video AI API for real generation.</div>
+</div>
+
+<script>
+const fileInput=document.getElementById('fileInput'), chooseBtn=document.getElementById('chooseBtn');
+const imagePreview=document.getElementById('imagePreview'), uploadContent=document.getElementById('uploadContent');
+const generateBtn=document.getElementById('generateBtn'), fileStatus=document.getElementById('fileStatus');
+const prompt=document.getElementById('prompt'), status=document.getElementById('status');
+const dropZone=document.getElementById('dropZone'), loading=document.getElementById('loading');
+const emptyResult=document.getElementById('emptyResult'), video=document.getElementById('video'), downloadBtn=document.getElementById('downloadBtn');
+
+let selectedFile=null;
+
+chooseBtn.onclick=()=>fileInput.click();
+fileInput.onchange=e=>handleFile(e.target.files[0]);
+
+function handleFile(file){
+  if(!file || !file.type.startsWith('image/')) return;
+  selectedFile=file;
+  imagePreview.src=URL.createObjectURL(file);
+  imagePreview.style.display='block'; uploadContent.style.display='none';
+  fileStatus.textContent=file.name+' selected.';
+  generateBtn.disabled=false;
+}
+['dragenter','dragover'].forEach(ev=>dropZone.addEventListener(ev,e=>{e.preventDefault();dropZone.style.borderColor='#7c5cff'}));
+['dragleave','drop'].forEach(ev=>dropZone.addEventListener(ev,e=>{e.preventDefault();dropZone.style.borderColor='#466184'}));
+dropZone.addEventListener('drop',e=>handleFile(e.dataTransfer.files[0]));
+
+generateBtn.onclick=()=>{
+  if(!selectedFile) return;
+  const text=prompt.value.trim();
+  if(!text){prompt.focus();status.textContent='Please describe the motion first.';return;}
+  status.textContent='Generating prototype preview...';
+  generateBtn.disabled=true; loading.style.display='block'; emptyResult.style.display='none'; video.style.display='none'; downloadBtn.style.display='none';
+
+  // Front-end demo: creates a short animated MP4-like preview using the selected image
+  // Replace this section with a real Image-to-Video API call in production.
+  setTimeout(()=>{
+    loading.style.display='none';
+    video.src=imagePreview.src; video.poster=imagePreview.src; video.style.display='block';
+    video.controls=true;
+    downloadBtn.href=imagePreview.src; downloadBtn.style.display='inline-block';
+    status.textContent='Prototype preview ready. Connect an AI video API for real motion generation.';
+    generateBtn.disabled=false;
+  },1800);
+};
+</script>
+</body>
+</html>
